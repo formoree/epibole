@@ -15,50 +15,45 @@
 import math
 
 
+def bridge_hand_shorthand(hand):
+    shorthand = ''
 
-def balanced_ternary(n):
-    def convert_ternary(n):
-        output = ''
-        while n != 0:
-            output = str(n % 3) + output
-            n = n // 3
-        return list(map(lambda x: int(x), list(output)))
+    spades = [card[0] for card in hand if card[1] == 'spades']
+    hearts = [card[0] for card in hand if card[1] == 'hearts']
+    diamonds = [card[0] for card in hand if card[1] == 'diamonds']
+    clubs = [card[0] for card in hand if card[1] == 'clubs']
 
-    if n > 0:
-        negative = False
-    elif n < 0:
-        n = -n
-        negative = True
-    else:
-        return [0]
+    shorthand = ''
 
-    normal_ternary = convert_ternary(n)
+    for suit in (spades, hearts, diamonds, clubs):
+        shorthand_piece = ''
+        while True:
+            if 'ace' in suit:
+                shorthand_piece += 'A'
+                suit.remove('ace')
+                continue
 
-    for i in range(len(normal_ternary) - 1, -1, -1):
-        if normal_ternary[i] == 2:
-            normal_ternary[i] = -1
-            if i != 0:
-                normal_ternary[i - 1] += 1
-            else:
-                normal_ternary = [1] + normal_ternary
+            if 'king' in suit:
+                shorthand_piece += 'K'
+                suit.remove('king')
+                continue
 
-        elif normal_ternary[i] == 3:
-            normal_ternary[i] = 0
-            if i != 0:
-                normal_ternary[i - 1] += 1
-            else:
-                normal_ternary = [1] + normal_ternary
+            if 'queen' in suit:
+                shorthand_piece += 'Q'
+                suit.remove('queen')
+                continue
 
-    mult = 1
-    for i in range(len(normal_ternary) - 1, -1, -1):
-        normal_ternary[i] *= mult
-        mult *= 3
+            if 'jack' in suit:
+                shorthand_piece += 'J'
+                suit.remove('jack')
+                continue
 
-    normal_ternary = list(filter(lambda x: x != 0, normal_ternary))
+            shorthand_piece += ''.join(['x' for x in suit])
+            break
 
-    if negative:
-        normal_ternary = list(map(lambda x: -x, normal_ternary))
+        if not shorthand_piece:
+            shorthand_piece = '-'
 
-    return normal_ternary
+        shorthand += shorthand_piece + ' '
 
-
+    return shorthand.strip()

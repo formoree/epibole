@@ -2,9 +2,18 @@
 > 外包项目汇总
 
 1. spider实战：spider实战教程
-
 2. mnist手写数字识别
 3. CCPS109:109道有关列表的python题。tester109.py来测试程序正确与否。
 4. 一维数据清理：提取目标编号的DNA序列
 5. 岭回归模型(DataScience)
 6. backtrader:代码讲解
+7. 全连接网络
+8. 遗传算法改进boost模型
+9. 代码讲解
+10. 决策树
+11. 三模型预测
+12. 代码讲解
+13. RNN
+14. kaggle-泰坦尼克号
+15. numpy写神经网络
+16. GRU、LSTM、随机森林进行时间序列预测

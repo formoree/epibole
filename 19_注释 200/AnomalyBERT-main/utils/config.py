@@ -1,3 +1,4 @@
+# 配置文件 定义了文件位置以及一些超参数
 import os
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))

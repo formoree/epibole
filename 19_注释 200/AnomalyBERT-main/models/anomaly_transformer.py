@@ -37,6 +37,8 @@ class AnomalyTransformer(nn.Module):
         """
         <input info>
         x : (n_batch, n_token, d_data) = (_, max_seq_len*patch_size, _)
+        AnomalyTransformer的forward方法接收一个输入张量x，并通过线性嵌入层将其嵌入到Transformer编码器中。
+        然后，编码器对数据进行编码，最后通过MLP层进行重构，并将结果返回
         """
         n_batch = x.shape[0]
         
@@ -74,6 +76,8 @@ def get_anomaly_transformer(input_d_data,
     transformer_n_layer : number of Transformer encoder layers
     transformer_n_head : number of heads in multi-head attention module
     dropout : dropout rate
+    get_anomaly_transformer函数接收一些参数，包括输入和输出数据的维度、嵌入维度、隐藏层维度、最大序列长度等。
+    它创建了一个线性嵌入层、一个Transformer编码器和一个MLP层，并将它们传递给AnomalyTransformer类的构造函数来创建模型。初始化权重的一些操作也在函数中完成。
     """
     hidden_dim = int(hidden_dim_rate * d_embed)
     

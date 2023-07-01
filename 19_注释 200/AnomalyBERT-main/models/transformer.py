@@ -15,6 +15,13 @@ from utils.functions import clone_layer
 
 # Main transformer encoder
 class TransformerEncoder(nn.Module):
+    """
+    这段代码定义了一个TransformerEncoder类，它是一组Transformer编码器层的堆叠。构造函数接收一个位置编码层、一个编码器层和编码器的层数作为参数。
+
+    在forward方法中，输入张量x首先通过位置编码层进行编码（如果位置编码层存在）。然后，输入张量通过一系列的编码器层进行编码。最后，返回编码后的张量。
+
+    这个类的作用是将输入序列通过多个Transformer编码器层进行编码，以获取表示输入的高级特征。
+    """
     def __init__(self, positional_encoding_layer, encoder_layer, n_layer):
         super(TransformerEncoder, self).__init__()
         self.encoder_layers = clone_layer(encoder_layer, n_layer)
@@ -42,6 +49,17 @@ class TransformerEncoder(nn.Module):
     
 # Encoder layer
 class EncoderLayer(nn.Module):
+    """
+    这段代码定义了一个EncoderLayer类，它包含了一个注意力层（attention_layer）、一个前馈层（feed_forward_layer）、一个归一化层（norm_layer）和一个Dropout层（dropout_layer）。
+
+    在构造函数中，注意力层、前馈层和归一化层被初始化，并且权重参数被初始化为Xavier均匀分布或零。dropout参数用于初始化Dropout层。
+
+    在forward方法中，输入张量x首先通过第一个归一化层进行归一化。然后，输入张量通过注意力层进行处理，并通过Dropout层进行随机失活。注意力层的输出与输入张量进行残差连接（加法操作），得到out1。
+
+    out1再通过第二个归一化层进行归一化。然后，out1通过前馈层进行处理，并再次通过Dropout层进行随机失活。前馈层的输出与out1进行残差连接，得到最终输出out2。
+
+    这个类的作用是定义Transformer编码器层的结构和操作。
+    """
     def __init__(self, attention_layer, feed_forward_layer, norm_layer, dropout=0.1):
         super(EncoderLayer, self).__init__()
         self.attention_layer = attention_layer
@@ -72,6 +90,23 @@ class EncoderLayer(nn.Module):
     
     
 class MultiHeadAttentionLayer(nn.Module):
+    """
+    定义了一个MultiHeadAttentionLayer类，它实现了多头注意力机制。构造函数接收一个输入的维度（d_embed）、头数（n_head）、最大序列长度（max_seq_len）和一个布尔值（relative_position_embedding）作为参数。
+
+    在构造函数中，首先检查d_embed是否能被n_head整除。然后计算每个头的维度（d_k）以及缩放因子（scale）。
+
+    接下来，使用克隆函数（clone_layer）复制三个线性层（word_fc_layers）来对输入进行线性变换，得到查询（query）、键（key）和值（value）。
+
+    然后，将查询、键和值进行分割，并进行相应的维度变换，以便进行多头注意力计算。
+
+    接下来，计算注意力得分（scores），并根据需要添加相对位置嵌入（relative_position_embedding）。如果relative_position_embedding为True，将获取预先计算好的相对位置嵌入表（relative_position_embedding_table），并根据相对位置索引（relative_position_index）将其添加到注意力得分中。
+
+    然后使用softmax函数对得分进行归一化，并利用注意力权重对值进行加权求和，得到注意力输出。
+
+    最后，将注意力输出通过线性层（output_fc_layer）进行变换，得到最终输出。
+
+    这个类的作用是实现多头注意力机制，用于对输入进行加权求和得到注意力表示。
+    """
     def __init__(self, d_embed, n_head, max_seq_len=512, relative_position_embedding=True):
         super(MultiHeadAttentionLayer, self).__init__()
         assert d_embed % n_head == 0  # Ckeck if d_model is divisible by n_head.
@@ -138,6 +173,15 @@ class MultiHeadAttentionLayer(nn.Module):
     
     
 class PositionWiseFeedForwardLayer(nn.Module):
+    """
+    这段代码定义了一个PositionWiseFeedForwardLayer类，它实现了位置前馈层。构造函数接收输入维度（d_embed）、前馈层维度（d_ff）和dropout概率（dropout）作为参数。
+
+    在构造函数中，定义了两个线性层（first_fc_layer和second_fc_layer），一个激活函数层（activation_layer）和一个Dropout层（dropout_layer）。
+
+    在forward方法中，输入张量x首先通过第一个线性层进行线性变换。然后，将变换后的张量通过激活函数层进行非线性变换，并通过Dropout层进行随机失活。最后，通过第二个线性层再次进行线性变换，得到最终输出。
+
+    这个类的作用是实现位置前馈层，用于对输入进行非线性变换。
+    """
     def __init__(self, d_embed, d_ff, dropout=0.1):
         super(PositionWiseFeedForwardLayer, self).__init__()
         self.first_fc_layer = nn.Linear(d_embed, d_ff)
@@ -153,6 +197,21 @@ class PositionWiseFeedForwardLayer(nn.Module):
     
     
 # Sinusoidal positional encoding
+"""
+这段代码定义了一个SinusoidalPositionalEncoding类，它实现了正弦位置编码。构造函数接收输入维度（d_embed）、最大序列长度（max_seq_len）和dropout概率（dropout）作为参数。
+
+在构造函数中，定义了一个Dropout层（dropout_layer）。
+
+然后，通过torch.arange函数生成一个形状为（max_seq_len，1）的位置张量positions，用于表示序列中每个位置的索引。同时，通过torch.arange函数生成一个形状为（d_embed//2，）的分母张量denominators，用于计算正弦和余弦函数的分母。
+
+接下来，通过torch.matmul函数将位置张量positions和分母张量denominators相乘得到编码矩阵encoding_matrix。
+
+然后，创建一个形状为（1，max_seq_len，d_embed）的空编码张量encoding。通过切片操作，将正弦编码和余弦编码分别填充到编码张量的奇数列和偶数列。
+
+最后，通过self.register_buffer函数将编码张量encoding注册为模型的缓冲区。
+
+这个类的作用是实现正弦位置编码，用于为输入序列的每个位置添加位置信息。
+"""
 class SinusoidalPositionalEncoding(nn.Module):
     def __init__(self, d_embed, max_seq_len=512, dropout=0.1):
         super(SinusoidalPositionalEncoding, self).__init__()
@@ -177,6 +236,15 @@ class SinusoidalPositionalEncoding(nn.Module):
     
     
 # Absolute position embedding
+"""
+这段代码定义了一个AbsolutePositionEmbedding类，它实现了绝对位置嵌入。构造函数接收输入维度（d_embed）、最大序列长度（max_seq_len）和dropout概率（dropout）作为参数。
+
+在构造函数中，定义了一个Dropout层（dropout_layer）和一个可学习的嵌入层（embedding）。嵌入层的形状为（1，max_seq_len，d_embed），用于存储绝对位置嵌入。
+
+在forward方法中，输入张量x首先通过dropout层进行随机失活。然后，将dropout后的张量与嵌入层相加，得到绝对位置嵌入后的张量。
+
+这个类的作用是实现绝对位置嵌入，用于为输入序列的每个位置添加位置信息。
+"""
 class AbsolutePositionEmbedding(nn.Module):
     def __init__(self, d_embed, max_seq_len=512, dropout=0.1):
         super(AbsolutePositionEmbedding, self).__init__()
@@ -194,6 +262,17 @@ class AbsolutePositionEmbedding(nn.Module):
     
 
 # Get a transformer encoder with its parameters.
+"""
+这段代码定义了一个名为get_transformer_encoder的函数，用于获取Transformer编码器。
+
+函数接收多个参数，包括输入维度（d_embed）、位置编码类型（positional_encoding）、是否使用相对位置嵌入（relative_position_embedding）、编码器层数（n_layer）、注意力头数（n_head）、前馈层维度（d_ff）、最大序列长度（max_seq_len）和dropout概率（dropout）。
+
+根据位置编码类型的不同，选择不同的位置编码层。如果位置编码类型为"Sinusoidal"、"sinusoidal"或"sin"，则使用SinusoidalPositionalEncoding类进行位置编码。如果位置编码类型为"Absolute"、"absolute"或"abs"，则使用AbsolutePositionEmbedding类进行位置编码。如果位置编码类型为None或"None"，则位置编码层为空。
+
+接下来，创建注意力层、前馈层、归一化层和编码器层。注意力层使用MultiHeadAttentionLayer类，前馈层使用PositionWiseFeedForwardLayer类，归一化层使用nn.LayerNorm类，编码器层使用EncoderLayer类。
+
+最后，返回一个TransformerEncoder对象，它包含位置编码层、编码器层和编码器层数。
+"""
 def get_transformer_encoder(d_embed=512,
                             positional_encoding=None,
                             relative_position_embedding=True,
